@@ -1,0 +1,94 @@
+Attribute VB_Name = "聚光灯"
+Option Explicit
+
+Sub 聚光灯打开()
+Application.ScreenUpdating = False
+Dim acl As Range
+Set acl = ActiveCell
+    On Error Resume Next
+    Dim wsht As String
+    Dim wkb As String
+    Dim ofc As FormatCondition
+    With ActiveSheet
+        For Each ofc In Cells.FormatConditions
+            If ofc.Formula1 = "=OR(CELL(""row"")=ROW(),CELL(""col"")=COLUMN())" Then ofc.Delete
+            If ofc.Formula1 = "=AND(CELL(""row"")=ROW(),CELL(""col"")=COLUMN())" Then ofc.Delete
+        Next
+        Cells.Select
+    '添加第一个条件格式：实现行列选择：
+        Selection.FormatConditions.Add Type:=xlExpression, Formula1:="=OR(CELL(""row"")=ROW(),CELL(""col"")=COLUMN())"
+        Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+        With Selection.FormatConditions(1).Font
+            .ThemeColor = xlThemeColorDark1
+            .TintAndShade = 0
+        End With
+        With Selection.FormatConditions(1).Interior
+            .PatternColorIndex = xlAutomatic
+            .Color = 5287936
+            .TintAndShade = 0
+        End With
+        Selection.FormatConditions(1).StopIfTrue = False
+        '添加第二个条件格式：实现选中单元格选择：
+    Selection.FormatConditions.Add Type:=xlExpression, Formula1:="=AND(CELL(""row"")=ROW(),CELL(""col"")=COLUMN())"
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Font
+        .Bold = True
+        .Italic = False
+        .Strikethrough = False
+        .Color = -16776961
+        .TintAndShade = 0
+    End With
+    With Selection.FormatConditions(1).Interior
+        .pattern = xlSolid
+        .PatternColorIndex = xlAutomatic
+        .ThemeColor = xlThemeColorDark1
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+    
+        wsht = Cells.Parent.CodeName
+        wkb = Cells.Parent.Parent.name
+        Call DeleteCode(wkb, wsht)
+        Call Addcode(wkb, wsht)
+    End With
+    acl.Select
+    Application.ScreenUpdating = True
+    Application.CutCopyMode = False
+End Sub
+Sub 聚光灯关闭()
+    On Error Resume Next
+    Dim wsht As String
+    Dim wkb As String
+    Dim ofc As FormatCondition
+    wsht = ActiveSheet.CodeName
+    wkb = ActiveSheet.Parent.name
+    Call DeleteCode(wkb, wsht)
+    For Each ofc In ActiveSheet.Cells.FormatConditions
+        If ofc.Formula1 = "=OR(CELL(""row"")=ROW(),CELL(""col"")=COLUMN())" Then ofc.Delete
+        If ofc.Formula1 = "=AND(CELL(""row"")=ROW(),CELL(""col"")=COLUMN())" Then ofc.Delete
+    Next
+End Sub
+
+Private Function DeleteCode(wkb As String, wsht As String)
+    Dim VBProj As Object
+    Dim VBComp As Object
+    Dim CodeMod As Object
+
+    Set VBProj = Workbooks(wkb).VBProject
+    Set VBComp = VBProj.VBComponents(wsht)
+    Set CodeMod = VBComp.CodeModule
+    With CodeMod
+        .DeleteLines 1, .CountOfLines
+    End With
+End Function
+ 
+ Private Function Addcode(wkb As String, wsht As String)
+     With Workbooks(wkb).VBProject.VBComponents(wsht).CodeModule
+        .InsertLines 1, "Option Explicit"
+        .InsertLines 2, "Private Function Addcode(wkb As String, wsht As String)"
+        .InsertLines 3, "With Workbooks(wkb).VBProject.VBComponents(wsht).CodeModule"
+        .InsertLines 4, "Private Sub Worksheet_SelectionChange(ByVal Target As Range)"
+        .InsertLines 5, "If Application.CutCopyMode = False Then Application.Calculate"
+        .InsertLines 6, "End Sub"
+    End With
+End Function
