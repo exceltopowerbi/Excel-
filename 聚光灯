@@ -1,6 +1,10 @@
 Attribute VB_Name = "聚光灯"
 Option Explicit
 
+
+'这个是利用条件格式和工作表事件结合，自动添加聚光灯和关闭聚光灯。
+'将这段代码导入模块，然后在excel快速访问工具栏添加两个按钮，一个指向“聚光灯打开”，一个指向“聚光灯关闭”
+'需要打开聚光灯的地方，点击下打开按钮就可以，需要关闭的时候点击关闭按钮。
 Sub 聚光灯打开()
 Application.ScreenUpdating = False
 Dim acl As Range
