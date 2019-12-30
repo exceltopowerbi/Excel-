@@ -1,0 +1,85 @@
+我被这个问题困扰了很久，在很长一段时间内，我都是用这个帖子里的方法，通过创建、读取、删除临时文件来在VB程序和Python程序间传递信息，麻烦，且低级。
+ 后来我终于找到了一本书（python programming on win32，有兴趣的下来看），终于发现了解决方法。COM组件！
+
+
+引用
+
+COM is a technology from Microsoft that allows objects to communicate without the need for either object to know any details about the other, even the language it's implemented in.
+
+
+看看本书某章节的总结：
+
+引用
+
+We have seen examples of the various data types that can be passed back and forth between the two languages: numbers, strings, and arrays. The ability to pass multidimensional arrays allows you to move large amounts of data between the two languages without writing a lot of conversion code.
+
+
+对于不想看书的人，我在这里提供一个书内的例子，这个简单的例子，已经可以解决很多混合编程的难题！
+ 在Python里（Python3.6）
+
+
+
+Python code
+
+#需要先安装pipywin32模块
+class PythonUtilities:
+ 
+    _public_methods_=['SplitString']
+    _reg_progid_='PythonDemos.Utilities'
+ 
+    # 使用"print (pythoncom.CreateGuid())" 得到一个自己的clsid，不要用下面这个！！
+    _reg_clsid_='{5FCAC95E-653A-484C-8568-A02D5E0256E8}'
+ 
+    def SplitString(self, val, item=None):
+        import string 
+        if item !=None: 
+            item=str(item)
+        val=str(val)
+        return val.split(item)
+ 
+if __name__=='__main__':
+    print ('Registering COM server...')
+    import win32com.server.register
+    win32com.server.register.UseCommandLine(PythonUtilities)
+ 
+
+在VB里
+
+Visual Basic code
+
+Private Sub Form_Load()
+    Set PythonUtils = CreateObject("PythonDemos.Utilities")
+    response = PythonUtils.SplitString("Hello from VB")
+    For Each Item In response
+        MsgBox Item
+    Next
+End Sub
+ 
+ 
+ 
+来源于赵四老师：
+不要做A语言代码修改为B语言代码的无用功。
+ 也不要做用A语言代码直接调用B语言代码库这样复杂、这样容易出错的傻事。
+ 只需让A、B语言代码的输入输出重定向到文本文件，或修改A、B语言代码让其通过文本文件输入输出。
+ 即可很方便地让A、B两种语言之间协调工作。
+ 比如：
+A将请求数据写到文件a.txt，写完后改名为aa.txt
+ B发现aa.txt存在时，读取其内容，调用相应功能，将结果写到文件b.txt，写完后删除aa.txt，改名为bb.txt
+ A发现bb.txt存在时，读取其内容，读完后删除bb.txt
+以上A可以替换为任何一种开发语言或开发环境，B可以替换为任何一种与A不同的开发语言或开发环境。
+ 除非A或B不支持判断文件是否存在、文件读写和文件更名。
+ 但是谁又能举出不支持判断文件是否存在、文件读写和文件更名的开发语言或开发环境呢？
+ 可以将临时文件放在RamDisk上提高效率减少磨损磁盘。
+ 数据的结构很复杂的话，文本文件的格式问题可参考json或xml
+
+共享临时文本文件这种进程之间的通讯方法相比其它方法的优点有很多，下面仅列出我现在能想到的：
+·进程之间松耦合
+·进程可在同一台机器上，也可跨机，跨操作系统，跨硬件平台，甚至跨国。
+·方便调试和监视，只需让第三方或人工查看该临时文本文件即可。
+·方便在线开关服务，只需删除或创建该临时文本文件即可。
+·方便实现分布式和负载均衡。
+·方便队列化提供服务，而且几乎不可能发生队列满的情况（除非硬盘空间满）
+·……
+
+ “跨语言、跨机，跨操作系统，跨硬件平台，跨国，跨*.*的”苦海无边，
+ 回头是“使用共享纯文本文件进行信息交流”的岸！
